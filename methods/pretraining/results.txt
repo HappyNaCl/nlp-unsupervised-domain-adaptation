@@ -1,3 +1,11 @@
 
 (useful for paper later)
 Bert MLM Final Eval Loss:
+=============================
+Training completed!
+Training loss: 2.4108
+Training time: 2820.73 seconds
+=============================
+Validation Results:
+  Validation Loss: 2.0622
+  Perplexity: 7.8629
