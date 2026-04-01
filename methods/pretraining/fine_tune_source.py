@@ -55,7 +55,7 @@ def main():
     print("="*60)
     
     # Load source_balanced.csv
-    df = pd.read_csv('source_balanced.csv')
+    df = pd.read_csv('./datasets/source_balanced.csv')
     
     print(f"Dataset shape: {df.shape}")
     print(f"\nColumns: {df.columns.tolist()}")
@@ -84,7 +84,7 @@ def main():
     print("Loading domain-adapted model...")
     print("="*60)
     
-    model_path = "./indobert_mlm_target_final"
+    model_path = "./models/indobert_mlm_target_final"
     
     print(f"Loading domain-adapted model from: {model_path}")
     
@@ -167,7 +167,7 @@ def main():
     
     # Define training arguments
     training_args = TrainingArguments(
-        output_dir="./indobert_source_finetuned",
+        output_dir="./models/indobert_source_finetuned",
         num_train_epochs=3,
         per_device_train_batch_size=16,
         per_device_eval_batch_size=16,
@@ -255,7 +255,7 @@ def main():
     print("Saving the fine-tuned model...")
     print("="*60)
     
-    output_dir = "./indobert_source_final"
+    output_dir = "./models/indobert_source_final"
     
     print(f"Saving model to {output_dir}...")
     trainer.save_model(output_dir)
@@ -285,7 +285,7 @@ def main():
     print("="*60)
     
     # Load mixed test set
-    mixed_test_df = pd.read_csv('mixed_test.csv')
+    mixed_test_df = pd.read_csv('./datasets/mixed_test.csv')
     print(f"\nMixed test set shape: {mixed_test_df.shape}")
     print(f"Columns: {mixed_test_df.columns.tolist()}")
     print(f"\nDistribution by origin:")
