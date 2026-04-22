@@ -17,7 +17,7 @@ if exist requirements.txt (
     echo Installing dependencies from requirements.txt...
     pip install -r requirements.txt
 
-    pip install 'accelerate>=1.1.0'
+    pip install "accelerate>=1.1.0"
 ) else (
     echo requirements.txt not found!
 )

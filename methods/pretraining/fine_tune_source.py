@@ -40,6 +40,76 @@ def compute_metrics(eval_pred):
     }
 
 
+def evaluate_on_test_set(trainer, tokenizer, test_df, text_column, label2id, id2label, 
+                         domain_name, tokenize_function):
+    """Evaluate the trained model on a given test set and print detailed metrics."""
+    print("\n" + "="*60)
+    print(f"Evaluating on {domain_name} test set...")
+    print("="*60)
+    
+    print(f"\nTest set shape: {test_df.shape}")
+    print(f"Label distribution:")
+    print(test_df['label'].value_counts())
+    
+    # Convert labels to numeric
+    test_df = test_df.copy()
+    test_df['label_id'] = test_df['label'].map(label2id)
+    
+    # Create dataset
+    test_dict = {
+        "text": test_df[text_column].tolist(),
+        "label": test_df['label_id'].tolist()
+    }
+    test_dataset = Dataset.from_dict(test_dict)
+    
+    # Tokenize
+    print(f"\nTokenizing {domain_name} test data...")
+    test_tokenized = test_dataset.map(
+        tokenize_function,
+        batched=True,
+        remove_columns=["text"],
+        desc=f"Tokenizing {domain_name} test"
+    )
+    
+    # Make predictions
+    print(f"\nMaking predictions on {domain_name} test set...")
+    predictions = trainer.predict(test_tokenized)
+    pred_labels = np.argmax(predictions.predictions, axis=1)
+    true_labels = predictions.label_ids
+    
+    # Calculate metrics
+    accuracy = accuracy_score(true_labels, pred_labels)
+    precision, recall, f1, _ = precision_recall_fscore_support(
+        true_labels, pred_labels, average='weighted'
+    )
+    
+    print(f"\n{domain_name.upper()} TEST SET RESULTS:")
+    print(f"  Samples:   {len(test_df)}")
+    print(f"  Accuracy:  {accuracy:.4f} ({accuracy*100:.2f}%)")
+    print(f"  Precision: {precision:.4f}")
+    print(f"  Recall:    {recall:.4f}")
+    print(f"  F1 Score:  {f1:.4f}")
+    
+    # Detailed classification report
+    print(f"\nDetailed Classification Report ({domain_name}):")
+    print("-"*60)
+    print(classification_report(
+        true_labels,
+        pred_labels,
+        target_names=['negative', 'positive'],
+        digits=4
+    ))
+    
+    return {
+        'domain': domain_name,
+        'accuracy': accuracy,
+        'precision': precision,
+        'recall': recall,
+        'f1': f1,
+        'samples': len(test_df)
+    }
+
+
 def main():
     # ========================================================================
     # Check GPU availability
@@ -54,8 +124,14 @@ def main():
     print("Loading source dataset...")
     print("="*60)
     
-    # Load source_balanced.csv
-    df = pd.read_csv('./datasets/source_balanced.csv')
+    # Load .csv
+    df = pd.read_csv('./datasets/lazada_train.csv')
+    
+    # Load target domain test .csv
+    target_test_df = pd.read_csv('./datasets/coastsent_test.csv')
+    
+    # Load source domain test .csv
+    source_test_df = pd.read_csv('./datasets/lazada_test.csv')
     
     print(f"Dataset shape: {df.shape}")
     print(f"\nColumns: {df.columns.tolist()}")
@@ -114,7 +190,7 @@ def main():
     
     # Create dataset from DataFrame
     dataset_dict = {
-        "text": df['content'].tolist(),
+        "text": df['reviewContent'].tolist(),
         "label": df['label_id'].tolist()
     }
     
@@ -218,15 +294,15 @@ def main():
     print(f"Training time: {train_result.metrics['train_runtime']:.2f} seconds")
     
     # ========================================================================
-    # Evaluate the Model
+    # Evaluate the Model on internal validation split
     # ========================================================================
     print("\n" + "="*60)
-    print("Evaluating model on test set...")
+    print("Evaluating model on internal validation split...")
     print("="*60)
     
     eval_results = trainer.evaluate()
     
-    print("\nTest Set Results:")
+    print("\nInternal Validation Results:")
     print(f"  Accuracy:  {eval_results['eval_accuracy']:.4f}")
     print(f"  Precision: {eval_results['eval_precision']:.4f}")
     print(f"  Recall:    {eval_results['eval_recall']:.4f}")
@@ -239,7 +315,7 @@ def main():
     true_labels = predictions.label_ids
     
     # Print detailed classification report
-    print("\nDetailed Classification Report:")
+    print("\nDetailed Classification Report (internal val):")
     print("="*60)
     print(classification_report(
         true_labels, 
@@ -278,94 +354,55 @@ def main():
     print(f"  tokenizer = AutoTokenizer.from_pretrained('{output_dir}')")
     
     # ========================================================================
-    # Test Predictions on Mixed Test Set (Source + Target)
+    # Evaluate on SOURCE test set (lazada_test.csv)
     # ========================================================================
-    print("\n" + "="*60)
-    print("Testing on mixed_test.csv (source + target domains)...")
-    print("="*60)
-    
-    # Load mixed test set
-    mixed_test_df = pd.read_csv('./datasets/mixed_test.csv')
-    print(f"\nMixed test set shape: {mixed_test_df.shape}")
-    print(f"Columns: {mixed_test_df.columns.tolist()}")
-    print(f"\nDistribution by origin:")
-    print(mixed_test_df['origin'].value_counts())
-    
-    # Convert labels to numeric
-    mixed_test_df['label_id'] = mixed_test_df['label'].map(label2id)
-    
-    # Create dataset
-    mixed_test_dict = {
-        "text": mixed_test_df['content'].tolist(),
-        "label": mixed_test_df['label_id'].tolist()
-    }
-    
-    mixed_test_dataset = Dataset.from_dict(mixed_test_dict)
-    
-    # Tokenize
-    print("\nTokenizing mixed test data...")
-    mixed_test_tokenized = mixed_test_dataset.map(
-        tokenize_function,
-        batched=True,
-        remove_columns=["text"],
-        desc="Tokenizing mixed test"
+    # NOTE: adjust the text column name below if your source test csv uses a
+    # different column than 'reviewContent'
+    source_results = evaluate_on_test_set(
+        trainer=trainer,
+        tokenizer=tokenizer,
+        test_df=source_test_df,
+        text_column='reviewContent',
+        label2id=label2id,
+        id2label=id2label,
+        domain_name='source',
+        tokenize_function=tokenize_function
     )
     
-    # Make predictions
-    print("\nMaking predictions on mixed test set...")
-    mixed_predictions = trainer.predict(mixed_test_tokenized)
-    mixed_pred_labels = np.argmax(mixed_predictions.predictions, axis=1)
-    mixed_true_labels = mixed_predictions.label_ids
+    # ========================================================================
+    # Evaluate on TARGET test set (coastsent_test.csv)
+    # ========================================================================
+    # NOTE: adjust the text column name below if your target test csv uses a
+    # different column than 'content'
+    target_results = evaluate_on_test_set(
+        trainer=trainer,
+        tokenizer=tokenizer,
+        test_df=target_test_df,
+        text_column='text',
+        label2id=label2id,
+        id2label=id2label,
+        domain_name='target',
+        tokenize_function=tokenize_function
+    )
     
-    # Add predictions to dataframe
-    mixed_test_df['predicted_label_id'] = mixed_pred_labels
-    mixed_test_df['predicted_label'] = mixed_test_df['predicted_label_id'].map(id2label)
-    
-    # Overall accuracy
-    overall_accuracy = accuracy_score(mixed_true_labels, mixed_pred_labels)
-    print(f"\n{'='*60}")
-    print(f"OVERALL ACCURACY: {overall_accuracy:.4f} ({overall_accuracy*100:.2f}%)")
-    print(f"{'='*60}")
-    
-    # Accuracy by origin
+    # ========================================================================
+    # Final Summary
+    # ========================================================================
     print("\n" + "="*60)
-    print("ACCURACY BY ORIGIN (SOURCE/TARGET)")
+    print("FINAL SUMMARY - Source vs Target Performance")
     print("="*60)
+    print(f"\n{'Metric':<12} {'Source':<15} {'Target':<15} {'Gap':<10}")
+    print("-"*52)
+    for metric in ['accuracy', 'precision', 'recall', 'f1']:
+        src_val = source_results[metric]
+        tgt_val = target_results[metric]
+        gap = src_val - tgt_val
+        print(f"{metric.capitalize():<12} {src_val:<15.4f} {tgt_val:<15.4f} {gap:<+10.4f}")
     
-    for origin in mixed_test_df['origin'].unique():
-        origin_mask = mixed_test_df['origin'] == origin
-        origin_df = mixed_test_df[origin_mask]
-        
-        origin_true = origin_df['label_id'].values
-        origin_pred = origin_df['predicted_label_id'].values
-        
-        origin_accuracy = accuracy_score(origin_true, origin_pred)
-        origin_precision, origin_recall, origin_f1, _ = precision_recall_fscore_support(
-            origin_true, origin_pred, average='weighted'
-        )
-        
-        print(f"\n{origin.upper()} Domain:")
-        print(f"  Samples:   {len(origin_df)}")
-        print(f"  Accuracy:  {origin_accuracy:.4f} ({origin_accuracy*100:.2f}%)")
-        print(f"  Precision: {origin_precision:.4f}")
-        print(f"  Recall:    {origin_recall:.4f}")
-        print(f"  F1 Score:  {origin_f1:.4f}")
-        
-        # Show classification report for this origin
-        print(f"\n  Classification Report for {origin.upper()}:")
-        print("  " + "-"*56)
-        report = classification_report(
-            origin_true, 
-            origin_pred, 
-            target_names=['negative', 'positive'],
-            digits=4
-        )
-        # Indent the report
-        for line in report.split('\n'):
-            print(f"  {line}")
+    print(f"\n{'Samples':<12} {source_results['samples']:<15} {target_results['samples']:<15}")
     
     print("\n" + "="*60)
-    print("Testing complete!")
+    print("Evaluation complete!")
     print("="*60)
 
 
