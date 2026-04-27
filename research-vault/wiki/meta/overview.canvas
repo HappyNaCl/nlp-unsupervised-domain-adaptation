@@ -1,0 +1,38 @@
+{
+  "nodes": [
+    {"id":"1","type":"file","file":"wiki/overview.md","x":0,"y":0,"width":300,"height":140,"color":"1"},
+    {"id":"2","type":"file","file":"wiki/concepts/Unsupervised Domain Adaptation.md","x":-400,"y":200,"width":300,"height":140,"color":"3"},
+    {"id":"3","type":"file","file":"wiki/concepts/Distribution Shift.md","x":-400,"y":380,"width":300,"height":140,"color":"3"},
+    {"id":"4","type":"file","file":"wiki/concepts/DANN (Domain-Adversarial Neural Networks).md","x":0,"y":200,"width":300,"height":140,"color":"3"},
+    {"id":"5","type":"file","file":"wiki/concepts/Gradient Reversal Layer.md","x":0,"y":380,"width":300,"height":140,"color":"3"},
+    {"id":"6","type":"file","file":"wiki/concepts/Alignment-Discriminability Tradeoff.md","x":0,"y":560,"width":300,"height":140,"color":"6"},
+    {"id":"7","type":"file","file":"wiki/concepts/Pre-training for Domain Adaptation.md","x":400,"y":200,"width":300,"height":140,"color":"3"},
+    {"id":"8","type":"file","file":"wiki/concepts/Adapters (NLP).md","x":400,"y":380,"width":300,"height":140,"color":"5"},
+    {"id":"9","type":"file","file":"wiki/concepts/DANN for NLP Text Domain Adaptation.md","x":400,"y":560,"width":300,"height":140,"color":"5"},
+    {"id":"10","type":"file","file":"wiki/concepts/Adapter + Adversarial Combination for NLP DA.md","x":400,"y":740,"width":300,"height":140,"color":"5"},
+    {"id":"11","type":"file","file":"wiki/entities/Office-31.md","x":-800,"y":200,"width":300,"height":140,"color":"2"},
+    {"id":"12","type":"file","file":"wiki/entities/Office-Home.md","x":-800,"y":380,"width":300,"height":140,"color":"2"},
+    {"id":"13","type":"file","file":"wiki/entities/DomainNet.md","x":-800,"y":560,"width":300,"height":140,"color":"2"},
+    {"id":"14","type":"file","file":"wiki/entities/VisDA-2017.md","x":-800,"y":740,"width":300,"height":140,"color":"2"},
+    {"id":"15","type":"file","file":"wiki/thesis/UDA Field Overview.md","x":-400,"y":560,"width":300,"height":140,"color":"5"},
+    {"id":"16","type":"file","file":"wiki/questions/Research - Pretrain vs DANN and Combining Them.md","x":800,"y":200,"width":320,"height":140,"color":"4"},
+    {"id":"17","type":"file","file":"wiki/questions/Research - Adapters and DANN for NLP Domain Adaptation.md","x":800,"y":380,"width":320,"height":140,"color":"4"}
+  ],
+  "edges": [
+    {"id":"e1","fromNode":"1","toNode":"2","label":"core concept"},
+    {"id":"e2","fromNode":"2","toNode":"3"},
+    {"id":"e3","fromNode":"2","toNode":"4"},
+    {"id":"e4","fromNode":"4","toNode":"5"},
+    {"id":"e5","fromNode":"4","toNode":"6"},
+    {"id":"e6","fromNode":"7","toNode":"4","label":"combines with"},
+    {"id":"e7","fromNode":"7","toNode":"16"},
+    {"id":"e8","fromNode":"8","toNode":"9","label":"NLP"},
+    {"id":"e9","fromNode":"9","toNode":"10"},
+    {"id":"e10","fromNode":"8","toNode":"10"},
+    {"id":"e11","fromNode":"10","toNode":"17"},
+    {"id":"e12","fromNode":"1","toNode":"11"},
+    {"id":"e13","fromNode":"1","toNode":"12"},
+    {"id":"e14","fromNode":"1","toNode":"13"},
+    {"id":"e15","fromNode":"1","toNode":"14"}
+  ]
+}
